@@ -1,0 +1,12 @@
+---
+ - hosts: all
+   name: sagar
+   become: yes
+   connection: ssh
+   tasks:
+   - name: install httpd from using the playbook
+     action: yum pkg=httpd state=installed
+     notify: start httpd after install
+   handlers:
+   - name: start httpd after install
+     action: service name=httpd state=restarted

@@ -1,0 +1,20 @@
+---
+ - hosts: all
+   become: yes
+   connection: ssh
+   tasks:
+   - name: install server from using the playbook
+     command: sudo apt-get -y install apache2
+     when: ansible_os_family == "Debian"
+     notify:
+     - restart apache2
+   - name: install server from using the playbook
+     command: yum install httpd -y
+     when: ansible_os_family == "RedHat"
+     notify:
+     - restart httpd
+   handlers:
+   - name: restart apache2
+     service: name=apache2 state=restarted
+   - name: restart httpd
+     service: name=httpd state=restarted

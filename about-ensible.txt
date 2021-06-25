@@ -1,0 +1,439 @@
+What is configuration management tool :
+-----------------
+    -> example: want to install operation system on 100 machine then 
+        system admin installing manually earlier but  now we have few automation tool which can install 
+        automatically and save lot of time and men made errors
+
+    -> configuration management tool example
+        -> cafe 
+        -> ansible
+        -> puppet 
+    -> for configuration management we have 2 type of mechanism
+                                            -----------------------
+                                                        |
+                                    ---------------------------------------------
+                                    |                                           |
+                                Pull Based                              Pushed Based
+                              (cafe | puppet)                            (ansible)
+        
+    -> Pull Based:
+    ---------------
+        -> each time client machine ask for any update and change to server
+        -> high overhead
+        -> in pull based we have to install client agent.
+        -> less secure as compare to push based 
+        -> ansible is new in market so limited support available but cafe is old and having high client base.
+        -> Example : cafe, puppet etc.
+    
+    -> Push based :
+    ------------------
+        -> less overhead
+        -> when any update come then server pushed that change to client machine
+        -> more secure because it's agent-less
+        -> connect to client machine via the SSH
+        -> example: Ansible
+
+    
+    Ansible:
+    --------
+        -> it used the YAML (yet another markup language) which is basically work in key pair form.
+        -> redHat launch ansible GUI tool called ansible tower.
+        -> Michael DeHaan is the developer founder of ansible in feb 2012
+        -> redHat accurse ansible in 2015.
+        -> can used this tool for on-premises tool and cloud server also.
+        -> it's enterprise version is paid but normal version is freely available
+        -> the package of ansible is very lightweight
+        
+    Term used in ansible:
+    ---------------------
+
+        1. Ansible server:
+        -----------------
+            -> the machine where ansible is installed and from where all task and play book will run
+        
+        2. Module :
+        -----------
+            -> it is a set of command or similar command which run at the client side.
+
+        3. Task:
+        --------
+            -> a task is a section that consist of a single procedure to be complete
+
+        4. Role:
+        --------
+            -> a way of organizing task and related files to be later called is a playbook
+
+        5. Fact :
+        ---------
+            -> information fetching from the client system from the global variable with the gather fact system
+        
+        6 inventory :
+        ------------
+            -> file containing data about the ansible client server
+        
+        7. Play: 
+        ----------
+            -> execution of play book
+        
+        8.handler :
+        ------------
+            -> task which is called only notifier is present 
+
+        9. Notifier:
+        -------------
+            -> Section attributed to a task which calls a handler if the output is changed.
+
+        10. Playbooks: 
+        --------------
+            -> it contain code in YAML language, which describe task to execute
+        
+        11. Host:
+        ---------
+            -> Node which are automated by ansible
+
+    How to connect multiple node from ansible server: 
+    ----------------------------------------------------
+
+        Step 1. create 3 EC2 instance with linux AMI 
+
+        Step 2 : give name Ansible Server, Node 1, Node 2 to all these instance 
+
+        Step 3 : login with all these 3 instance via SSH
+
+        Step 4: on ansible server we have to download wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+        Step 5: after that install sudo yum install epel-release-latest-7.noarch.rpm
+
+        Step 6:  after that we are installing required package using the following command 
+                sudo yum install git python python-level python-pip openssl ansible 
+       
+        Step 7: On Ansible server we have to add the group in hosts on ansible 
+                    command: 
+                                -> vi /etc/ansible/hosts
+
+                                    -> in example1 add the following lines 
+                                        [group_name]
+                                        private_ipv4 of node1
+                                        private_ipv4 of node2
+                                -> :wq and enter 
+        Step 8: Now we have to change Some config in ansible server so that my ansible server can identify
+                 the attached nodes
+                 command: 
+                            -> vi /etc/ansible/ansible.cfg 
+
+                            -> here uncomment the following line 
+                                -> inventory = /etc/ansible/hosts
+                                -> sudo_user = root
+
+        Step 9: now we have to do some work on all these instances 
+
+        Step 10: create one user on each node so following command run on all 3 instance 
+                command: adduser username/sagar
+
+        Step 11: set password for this user on each instance 
+                command: passwd sagar and after that set password for user in all instance
+        
+        Step 12: now 3 new user created on each instance but these user don't have the root/sudo privilege
+                 so for that we have to do the following step after that our user can install anything
+                
+        Step 13: enter ****visudo***** command on terminal in all 3 instance and add the new user privilege
+                    when you hit enter it will open one file in this file you have to write the 
+                    following command below to "root ALL=(ALL) ALL" line
+
+                    -> sagar ALL=(ALL) ALL add this line and save & exit 
+
+                    in all three node you have to do this same changes.
+
+        Step 14: now we able to install anything because we have sudo permission
+
+        Step 15: now we want to take ssh of node1 or node2 on Ansible Server so it will give errors
+                    so for that we have to follow the some more steps to achieve that 
+        
+        Step 16: modify the SSh file 
+                    command: 
+                            -> vi /etc/ssh/sshd_config
+                            -> press enter -> press i
+                            -> uncomment PermitRootLogin
+                            -> uncomment PasswordAuthentication yes
+                            -> comment PasswordAuthentication no 
+                            -> save & exit
+
+                            -> sudo service sshd restart
+
+                -> ****** do same change on all Nodes Also **********
+
+        Step 16: login with new created user on Ansible Server to Take SSH
+
+        Step 17 : run the following command to take ssh of any node
+                    -> ssh private_ipv4
+                    -> it will ask for password so you can provide.
+
+        Step 18: (now if you want to give ssh access and don't want to type password each time)
+                -> same nitin is also doing in dealshare when we are asking for ssh access
+            
+        Step 19 : setup trust certificate between the Ansible server and the Node
+                    so for that following step are required
+                        Step 1: on ansible server from new generated user create ssh key
+                        Step 2: run the following command:
+                        Step 3:  ssh-keygen
+                        Step 4: cd .ssh/
+                        Step 5: copy this public key to another nodes so i can take ssh without password
+                        step 6: ssh-copy-id node1-user@private_ipv4 and enter node1 password last time 
+                        Step 7: same step 6 you can repeat for node 2.
+                    
+
+    Host Pattern :
+    ---------------
+        -> get all host list 
+            command: ansible all --list-host
+        -> get group members 
+            command: ansible <group_name>/sagar --list-host
+        -> get last member of group 
+            command: ansible sagar[-1] --list-host
+        -> get range 
+            command: ansible sagar[0:3] --list-host
+        -> get first 
+            command: ansible sagar[0] --list-host
+
+
+    Now Main thing come into picture :
+    ----------------------------------
+        -> we want to perform configuration management task on node then how we can perform so for that
+            we have 3 ways 
+
+            1. Ad-hoc command
+            2. Module 
+            3. Playbooks
+
+        1. Ad-hoc command:
+        --------------------
+            -> it is basically linux command which we want to run on nodes
+            -> very light weight task we will do from these command for heavy task it is not recommende
+            -> now see example:
+                -> go to ansible server and login with newly created user 
+                
+                1. now if we want to create one "file1" on a group of node
+                    -> command: ansible group_name -a "touch file1"
+
+                    here -a is used for argument and -ba means sudo user command with argument 
+
+                2. create a file on all nodes 
+                    command :  ansible all -a "touch file1"
+
+                3. create a file on group first member only
+                    command : ansible group_name[0] -a "touch file1"
+
+                4. install httpd package on a specific group]  
+                    command:  ansible group_name -a "sudo yum install httpd -y" 
+                                                or
+                                ansible group_name -ba "yum install httpd -y"
+
+        2. Ansible Module :
+        -------------------
+            -> ansible ships with a number of modules (called library) that can execute directly on remote 
+                host or through playbook
+            -> /etc/ansible/hosts is the location where all ansible module are stored 
+            -> your library or module are present on any machine there is no extra server, database required.
+
+            -> ****** in module and playbook idempotency present *****
+            -> now if you want to install any package 
+                command : ansible all/group_name -b -m yum -a "pkg=httpd state=present"
+
+            ->  now if you want to remove any package
+                command : ansible all/group_name -b -m yum -a "pkg=httpd state=absent"
+
+            -> now if you want to update any package
+                command : ansible all/group_name -b -m yum -a "pkg=httpd state=latest"
+            
+            -> if you want to start service 
+                command : ansible all/group_name -b -m service -a "name=httpd state=started"
+
+            -> if you want to create a user 
+                command : ansible all/group_name -b -m user -a "name=sagar"
+
+            -> if you want to copy file 
+                command : ansible all/group_name -b -m copy -a "src=file1.txt dest=/etc"
+
+            Note: main difference between module and ad-hoc command is that ad-hoc command execute each time without
+                    checking on node although module check state of nodes before execution.
+                    
+                    command to check state of nodes.
+                        -> ansible group_name -m setup
+                        ->  it will give the current state of nodes and whenever we run any command on ansible 
+                            server than it will first run this command internally and check the current state.
+
+                        -> if you want to see only ipv4 address of specific group then run following command
+                            on ansible server :
+                                -> ansible group_name -m setup -a "filter=*ipv4*" 
+
+        3. Playbook:
+        -------------
+            -> it is written in YAML language 
+            -> YAMl is human readable, data serialization language, commonly used in configuration files.
+            -> playbook is a file where you write your task. it contains the following options
+                -> variable
+                -> task
+                -> handler
+                -> roles
+                -> files
+                -> templates
+            
+            -> playbook is collection of one or more module
+            -> playbook are divided into multiple section
+                1.Target Section : node, group_name, all where you want to execute the task
+                2.Variable Section : some values we want to use in playbook that can change in future
+                3.Task: list of all the task which we want to perform in an order.
+
+
+            YAML (Yet another markup language):
+            -----------------------------------
+            -> for ansible each YAMl files start with the list.
+            -> each item in the list is a list of key-value pair commonly called directory
+            -> each YAML files start with "---" and and with "..." ending is optional
+            -> file name recommended as .yaml file.
+            -> the member of list must begin with same indentation and starting with "-"
+            -> dictionary is same as list only difference that dictionary present in key : value pair 
+
+
+            How to create a Playbook & Run :
+            --------------------------------
+                step1 -> login in ansible server with newly created used "su - sagar"
+                step2 ->  now create playbook
+                step3 -> run the following command : vi playbook_file_name.yml 
+                step4-> now write the below code 
+                        => 
+                            --- # my playbook
+                            - hosts: group_one/all
+                            - user: name/sagar
+                              become: yes
+                              connection: ssh
+                              gather_facts: yes
+
+                            => press esc + :wq
+                step5: now execute the created playbook 
+                        => ansible-playbook playbook_file_name.yml
+                    
+            Variable:
+            ----------
+                -> variable is a datatype which is used to store value that can be change.
+                -> program to show how we can use variable 
+                -> now write the below code 
+                        => 
+                            --- # my playbook
+                            - hosts: group_one/all
+                            - user: name/sagar
+                              become: yes
+                              connection: ssh
+                              vars: 
+                                    package: httpd
+                              task: 
+                                    - name: install package on server
+                                      action: yum pkg='{{package}}' state=installed
+
+                            => press esc + :wq
+                step5: now execute the created playbook 
+                        => ansible-playbook playbook_file_name.yml
+
+            Handler:
+            ------------
+                -> a handler is same as task but it will run when called by another task.
+                                                        OR 
+                -> it is just like a task in an ansible but it will only run if the task contain 
+                notify  directive and also indicate it change something
+
+                Playbook of handler:
+                --------------------
+                     -> now write the below code 
+                        => 
+                            --- # my playbook
+                            - hosts: group_one/all
+                            - user: name/sagar
+                              become: yes
+                              connection: ssh
+                              vars: 
+                                    package: httpd
+                              task: 
+                                    - name: install package on server
+                                      action: yum pkg='{{package}}' state=installed
+                                      notify: restart httpd message
+                              handler:
+                                    - name: restart httpd message
+                                      action: service name=httpd state=restarted
+                            => press esc + :wq
+                step5: now execute the created playbook 
+                        => ansible-playbook playbook_file_name.yml
+
+            DryRun : 
+            ----------
+                -> check whether the playbook is formatted correctly
+                -> command: 
+                        -> ansible-playbook playbook_file_name.yml --check
+
+            Loop:
+            ------
+                -> to perform the repetitive work 
+                -> now write the below code 
+                        => 
+                            --- # my playbook
+                            - hosts: group_one/all
+                            - user: name/sagar
+                              become: yes
+                              connection: ssh
+                              task: 
+                                    - name: create user
+                                      action: user name='{{item}}' state=present
+                              with items:
+                                    - name1
+                                    - name2
+                                    - name3
+                                    - name4
+                                
+                            => press esc + :wq
+                        => now execute the created playbook 
+                        => ansible-playbook playbook_file_name.yml
+
+            Condition:
+            -----------
+                -> in programming we having if/else statement similar kind thing for decision making we can use Condition
+                -> for real life example some machine having Debian and some RedHat so for any installation based on o.s 
+                    we have to put condition in playbook
+
+                -> play book example for condition 
+                ----------------------------------
+                         => 
+                            --- # my playbook
+                            - hosts: group_one/all
+                            - user: name/sagar
+                              become: yes
+                              connection: ssh
+                              task: 
+                                    - name: create user
+                                      command: (write you linux command directly) apt-get -y install apache2
+                                      when: ansible_os_family == "Debian"
+                                      command: yum install httpd -y
+                                      when: ansible_os_family == "RedHat"
+                                      
+                                
+                            => press esc + :wq
+                        => now execute the created playbook 
+                        => ansible-playbook playbook_file_name.yml
+
+            Vault :
+            --------
+                -> AES256
+                -> you can encrypt your playbook file for security purpose
+                -> following command is useful for security
+                    -> create a encrypted playbook 
+                        command: ansible-vault create playbook_file_name.yml
+                    -> edit a encrypted playbook
+                        command: ansible-vault edit playbook_file_name.yml
+                    -> change password
+                        command: ansible-vault rekey playbook_file_name.yml
+                    -> to encrypt an existing playbook
+                        command: ansible-vault encrypt playbook_file_name.yml
+                    -> to decrypt an existing playbook
+                        command: ansible-vault decrypt playbook_file_name.yml
+
+
+
+                
